@@ -4,10 +4,10 @@ static class Program
     static async Task Main(string[] args)
     {
         Logging.Init();
-
         try
         {
             var rootCommand = GetRootCommandAndSetupCommandLineHandling();
+            Log.Information("args passed in " + string.Join("", args));
             await rootCommand.InvokeAsync(args);
         }
         catch (Exception exception)
@@ -30,7 +30,6 @@ static class Program
             await Inner(excluded!);
         },
         exclusionsOption);
-        Log.Information("args passed in " + string.Join("", args));
         return rootCommand;
     }
 

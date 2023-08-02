@@ -7,3 +7,5 @@ obj/
 .idea/
 *.received.*
 nugets/
+.vscode/tasks.json
+.vscode/launch.json

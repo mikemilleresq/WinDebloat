@@ -1,24 +1,42 @@
-﻿static class Program
+﻿using System.CommandLine;
+static class Program
 {
-    static async Task Main()
+    static async Task Main(string[] args)
     {
         Logging.Init();
 
         try
         {
-            await Inner();
+            var rootCommand = new System.CommandLine.RootCommand("App to debloat base window installs");
+
+            var exclusionsOption = new System.CommandLine.Option<string[]>(name: "--exclusions", description: "Packages to exclude from the standard list");
+            exclusionsOption.AddAlias("e");
+            exclusionsOption.AllowMultipleArgumentsPerToken = true;
+            exclusionsOption.IsRequired = true;
+            rootCommand.AddOption(exclusionsOption);
+            rootCommand.SetHandler(async (excluded) => 
+            { 
+                await Inner(excluded!); 
+            },
+            exclusionsOption);
+            Log.Information("args passed in " + string.Join("", args));
+
+
+            await rootCommand.InvokeAsync(args);
+
         }
         catch (Exception exception)
         {
-            Log.Fatal(exception, "Failed at startup");
+            Log.Fatal(exception, "Failed at startup ");
             throw;
         }
     }
 
-    static async Task Inner()
+    static async Task Inner(string[]? exclusions)
     {
         //https://winget.run
         //https://github.com/valinet/ExplorerPatcher
+
         RemoveChat();
         DisableStartupBoost();
         RemoveTaskBarSearch();
@@ -27,41 +45,48 @@
         EnableDeveloperMode();
         DisableWebSearch();
         MakePowerShelUnrestricted();
+        
+        await RemoveIfNotExcluded(exclusions, "Teams Machine-Wide Installer");
+        await RemoveIfNotExcluded(exclusions, "Movies & TV");
+        await RemoveIfNotExcluded(exclusions, "Xbox TCUI");
+        await RemoveIfNotExcluded(exclusions, "Xbox Console Companion");
+        await RemoveIfNotExcluded(exclusions, "Xbox Game Bar Plugin");
+        await RemoveIfNotExcluded(exclusions, "Xbox Identity Provider");
+        await RemoveIfNotExcluded(exclusions, "Xbox Game Speech Window");
+        await RemoveIfNotExcluded(exclusions, "Xbox Game Bar");
+        await RemoveIfNotExcluded(exclusions, "Xbox");
+        await RemoveIfNotExcluded(exclusions, "Microsoft Tips");
+        await RemoveIfNotExcluded(exclusions, "MSN Weather");
+        await RemoveIfNotExcluded(exclusions, "Windows Media Player");
+        await RemoveIfNotExcluded(exclusions, "Mail and Calendar");
+        await RemoveIfNotExcluded(exclusions, "Microsoft Whiteboard");
+        await RemoveIfNotExcluded(exclusions, "Microsoft Pay");
+        await RemoveIfNotExcluded(exclusions, "Skype");
+        await RemoveIfNotExcluded(exclusions, "Windows Maps");
+        await RemoveIfNotExcluded(exclusions, "Feedback Hub");
+        await RemoveIfNotExcluded(exclusions, "Microsoft Photos");
+        await RemoveIfNotExcluded(exclusions, "Windows Camera");
+        await RemoveIfNotExcluded(exclusions, "Microsoft To Do");
+        await RemoveIfNotExcluded(exclusions, "Microsoft People");
+        await RemoveIfNotExcluded(exclusions, "Solitaire & Casual Games");
+        await RemoveIfNotExcluded(exclusions, "Mixed Reality Portal");
+        await RemoveIfNotExcluded(exclusions, "Microsoft Sticky Notes");
+        await RemoveIfNotExcluded(exclusions, "News");
+        await RemoveIfNotExcluded(exclusions, "Get Help");
+        await RemoveIfNotExcluded(exclusions, "Paint 3D");
+        await RemoveIfNotExcluded(exclusions, "Paint");
+        await RemoveIfNotExcluded(exclusions, "Cortana");
+        await RemoveIfNotExcluded(exclusions, "Clipchamp");
+        await RemoveIfNotExcluded(exclusions, "Power Automate");
+        await RemoveIfNotExcluded(exclusions, "OneNote for Windows 10");
 
-        await WinGet.UninstallByName("Teams Machine-Wide Installer");
-        await WinGet.UninstallByName("Movies & TV");
-        await WinGet.UninstallByName("Xbox TCUI");
-        await WinGet.UninstallByName("Xbox Console Companion");
-        await WinGet.UninstallByName("Xbox Game Bar Plugin");
-        await WinGet.UninstallByName("Xbox Identity Provider");
-        await WinGet.UninstallByName("Xbox Game Speech Window");
-        await WinGet.UninstallByName("Xbox Game Bar");
-        await WinGet.UninstallByName("Xbox");
-        await WinGet.UninstallByName("Microsoft Tips");
-        await WinGet.UninstallByName("MSN Weather");
-        await WinGet.UninstallByName("Windows Media Player");
-        await WinGet.UninstallByName("Mail and Calendar");
-        await WinGet.UninstallByName("Microsoft Whiteboard");
-        await WinGet.UninstallByName("Microsoft Pay");
-        await WinGet.UninstallByName("Skype");
-        await WinGet.UninstallByName("Windows Maps");
-        await WinGet.UninstallByName("Feedback Hub");
-        await WinGet.UninstallByName("Microsoft Photos");
-        await WinGet.UninstallByName("Windows Camera");
-        await WinGet.UninstallByName("Microsoft To Do");
-        await WinGet.UninstallByName("Microsoft People");
-        await WinGet.UninstallByName("Solitaire & Casual Games");
-        await WinGet.UninstallByName("Mixed Reality Portal");
-        await WinGet.UninstallByName("Microsoft Sticky Notes");
-        await WinGet.UninstallByName("News");
-        await WinGet.UninstallByName("Get Help");
-        await WinGet.UninstallByName("Paint 3D");
-        await WinGet.UninstallByName("Paint");
         await WinGet.InstallById("dotPDNLLC.paintdotnet");
-        await WinGet.UninstallByName("Cortana");
-        await WinGet.UninstallByName("Clipchamp");
-        await WinGet.UninstallByName("Power Automate");
-        await WinGet.UninstallByName("OneNote for Windows 10");
+
+    }
+
+    static Task RemoveIfNotExcluded(string[]? exclusions, string packageName) {
+        if (exclusions == null || exclusions.Contains(packageName)) return new Task(() => Console.WriteLine($"Package {packageName} skipped due to exclusions"));
+        return WinGet.UninstallByName(packageName);
     }
 
     static void RemoveChat() =>

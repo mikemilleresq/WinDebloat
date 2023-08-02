@@ -7,7 +7,7 @@ static class Program
 
         try
         {
-            RootCommand rootCommand = GetRootCommandAndSetupCommandLineHandling();
+            var rootCommand = GetRootCommandAndSetupCommandLineHandling();
             await rootCommand.InvokeAsync(args);
         }
         catch (Exception exception)

@@ -27,10 +27,10 @@ static class Program
         rootCommand.AddOption(exclusionsOption);
         rootCommand.SetHandler(async (excluded) =>
         {
-        await Inner(excluded!);
+            await Inner(excluded!);
         },
         exclusionsOption);
-                Log.Information("args passed in " + string.Join("", args));
+        Log.Information("args passed in " + string.Join("", args));
         return rootCommand;
     }
 

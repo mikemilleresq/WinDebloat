@@ -7,29 +7,31 @@ static class Program
 
         try
         {
-            var rootCommand = new System.CommandLine.RootCommand("App to debloat base window installs");
-
-            var exclusionsOption = new System.CommandLine.Option<string[]>(name: "--exclusions", description: "Packages to exclude from the standard list");
-            exclusionsOption.AddAlias("e");
-            exclusionsOption.AllowMultipleArgumentsPerToken = true;
-            exclusionsOption.IsRequired = true;
-            rootCommand.AddOption(exclusionsOption);
-            rootCommand.SetHandler(async (excluded) => 
-            { 
-                await Inner(excluded!); 
-            },
-            exclusionsOption);
-            Log.Information("args passed in " + string.Join("", args));
-
-
+            RootCommand rootCommand = GetRootCommandAndSetupCommandLineHandling();
             await rootCommand.InvokeAsync(args);
-
         }
         catch (Exception exception)
         {
             Log.Fatal(exception, "Failed at startup ");
             throw;
         }
+    }
+
+    private static RootCommand GetRootCommandAndSetupCommandLineHandling()
+    {
+        var rootCommand = new System.CommandLine.RootCommand("App to debloat base window installs");
+        var exclusionsOption = new System.CommandLine.Option<string[]>(name: "--exclusions", description: "Packages to exclude from the standard list");
+        exclusionsOption.AddAlias("e");
+        exclusionsOption.AllowMultipleArgumentsPerToken = true;
+        exclusionsOption.IsRequired = true;
+        rootCommand.AddOption(exclusionsOption);
+        rootCommand.SetHandler(async (excluded) =>
+        {
+        await Inner(excluded!);
+        },
+        exclusionsOption);
+                Log.Information("args passed in " + string.Join("", args));
+        return rootCommand;
     }
 
     static async Task Inner(string[]? exclusions)
@@ -45,7 +47,7 @@ static class Program
         EnableDeveloperMode();
         DisableWebSearch();
         MakePowerShelUnrestricted();
-        
+
         await RemoveIfNotExcluded(exclusions, "Teams Machine-Wide Installer");
         await RemoveIfNotExcluded(exclusions, "Movies & TV");
         await RemoveIfNotExcluded(exclusions, "Xbox TCUI");

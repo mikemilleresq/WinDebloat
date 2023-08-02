@@ -86,7 +86,7 @@ static class Program
     }
 
     static Task UninstallByNameIfNotExcluded(string[]? exclusions, string packageName) {
-        if (exclusions != null && exclusions.Contains(packageName)) return new Task(() => Console.WriteLine($"Package {packageName} skipped due to exclusions"));
+        if (exclusions != null && exclusions.Contains(packageName)) return new Task(() => Log.Information($"Package {packageName} skipped due to exclusions"));
         return WinGet.UninstallByName(packageName);
     }
 

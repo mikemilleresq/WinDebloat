@@ -23,7 +23,7 @@ static class Program
         var exclusionsOption = new System.CommandLine.Option<string[]>(name: "--exclusions", description: "Packages to exclude from the standard list");
         exclusionsOption.AddAlias("e");
         exclusionsOption.AllowMultipleArgumentsPerToken = true;
-        exclusionsOption.IsRequired = true;
+        exclusionsOption.IsRequired = false;
         rootCommand.AddOption(exclusionsOption);
         rootCommand.SetHandler(async (excluded) =>
         {

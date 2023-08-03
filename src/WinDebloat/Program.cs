@@ -1,6 +1,42 @@
 ﻿using System.CommandLine;
 static class Program
 {
+    static string[] _inclusions = { 
+        "Teams Machine-Wide Installer", 
+        "Movies & TV",
+        "Xbox TCUI",
+        "Xbox Console Companion",
+        "Xbox Game Bar Plugin",
+        "Xbox Identity Provider",
+        "Xbox Game Speech Window",
+        "Xbox Game Bar",
+        "Xbox",
+        "Microsoft Tips",
+        "MSN Weather",
+        "Windows Media Player",
+        "Mail and Calendar",
+        "Microsoft Whiteboard",
+        "Microsoft Pay",
+        "Skype",
+        "Windows Maps",
+        "Feedback Hub",
+        "Microsoft Photos",
+        "Windows Camera",
+        "Microsoft To Do",
+        "Microsoft People",
+        "Solitaire & Casual Games",
+        "Mixed Reality Portal",
+        "Microsoft Sticky Notes",
+        "News",
+        "Get Help",
+        "Paint 3D",
+        "Paint",
+        "Cortana",
+        "Clipchamp",
+        "Power Automate",
+        "OneNote for Windows 10"
+    };
+
     static async Task Main(string[] args)
     {
         Logging.Init();
@@ -20,24 +56,32 @@ static class Program
     private static RootCommand GetRootCommandAndSetupCommandLineHandling()
     {
         var rootCommand = new System.CommandLine.RootCommand("App to debloat base window installs");
+        
         var exclusionsOption = new System.CommandLine.Option<string[]>(name: "--exclusions", description: "Packages to exclude from the standard list");
         exclusionsOption.AddAlias("e");
         exclusionsOption.AllowMultipleArgumentsPerToken = true;
         exclusionsOption.IsRequired = false;
+
+        var inclusionOption = new System.CommandLine.Option<string[]>(name: "--inclusions", description: "Packages to include in the standard list");
+        inclusionOption.AddAlias("i");
+        inclusionOption.AllowMultipleArgumentsPerToken = true;
+        inclusionOption.IsRequired = false;
+
         rootCommand.AddOption(exclusionsOption);
-        rootCommand.SetHandler(async (excluded) =>
+        rootCommand.AddOption(inclusionOption);
+        rootCommand.SetHandler(async (excluded, included) =>
         {
-            await Inner(excluded!);
+            await Inner(excluded!,included!);
         },
-        exclusionsOption);
+        exclusionsOption, inclusionOption);
         return rootCommand;
     }
 
-    static async Task Inner(string[]? exclusions)
+    static async Task Inner(string[]? exclusions, string[]? inclusions)
     {
         //https://winget.run
         //https://github.com/valinet/ExplorerPatcher
-
+        if (inclusions == null || inclusions.Length ==0) inclusions = _inclusions;
         RemoveChat();
         DisableStartupBoost();
         RemoveTaskBarSearch();
@@ -47,47 +91,14 @@ static class Program
         DisableWebSearch();
         MakePowerShelUnrestricted();
 
-        await UninstallByNameIfNotExcluded(exclusions, "Teams Machine-Wide Installer");
-        await UninstallByNameIfNotExcluded(exclusions, "Movies & TV");
-        await UninstallByNameIfNotExcluded(exclusions, "Xbox TCUI");
-        await UninstallByNameIfNotExcluded(exclusions, "Xbox Console Companion");
-        await UninstallByNameIfNotExcluded(exclusions, "Xbox Game Bar Plugin");
-        await UninstallByNameIfNotExcluded(exclusions, "Xbox Identity Provider");
-        await UninstallByNameIfNotExcluded(exclusions, "Xbox Game Speech Window");
-        await UninstallByNameIfNotExcluded(exclusions, "Xbox Game Bar");
-        await UninstallByNameIfNotExcluded(exclusions, "Xbox");
-        await UninstallByNameIfNotExcluded(exclusions, "Microsoft Tips");
-        await UninstallByNameIfNotExcluded(exclusions, "MSN Weather");
-        await UninstallByNameIfNotExcluded(exclusions, "Windows Media Player");
-        await UninstallByNameIfNotExcluded(exclusions, "Mail and Calendar");
-        await UninstallByNameIfNotExcluded(exclusions, "Microsoft Whiteboard");
-        await UninstallByNameIfNotExcluded(exclusions, "Microsoft Pay");
-        await UninstallByNameIfNotExcluded(exclusions, "Skype");
-        await UninstallByNameIfNotExcluded(exclusions, "Windows Maps");
-        await UninstallByNameIfNotExcluded(exclusions, "Feedback Hub");
-        await UninstallByNameIfNotExcluded(exclusions, "Microsoft Photos");
-        await UninstallByNameIfNotExcluded(exclusions, "Windows Camera");
-        await UninstallByNameIfNotExcluded(exclusions, "Microsoft To Do");
-        await UninstallByNameIfNotExcluded(exclusions, "Microsoft People");
-        await UninstallByNameIfNotExcluded(exclusions, "Solitaire & Casual Games");
-        await UninstallByNameIfNotExcluded(exclusions, "Mixed Reality Portal");
-        await UninstallByNameIfNotExcluded(exclusions, "Microsoft Sticky Notes");
-        await UninstallByNameIfNotExcluded(exclusions, "News");
-        await UninstallByNameIfNotExcluded(exclusions, "Get Help");
-        await UninstallByNameIfNotExcluded(exclusions, "Paint 3D");
-        await UninstallByNameIfNotExcluded(exclusions, "Paint");
-        await UninstallByNameIfNotExcluded(exclusions, "Cortana");
-        await UninstallByNameIfNotExcluded(exclusions, "Clipchamp");
-        await UninstallByNameIfNotExcluded(exclusions, "Power Automate");
-        await UninstallByNameIfNotExcluded(exclusions, "OneNote for Windows 10");
+        foreach (var packageName in inclusions)   {
+            if (exclusions == null |! exclusions!.Contains(packageName)) {
+                await WinGet.UninstallByName(packageName);
+            }
+        }
 
         await WinGet.InstallById("dotPDNLLC.paintdotnet");
 
-    }
-
-    static Task UninstallByNameIfNotExcluded(string[]? exclusions, string packageName) {
-        if (exclusions != null && exclusions.Contains(packageName)) return new Task(() => Log.Information($"Package {packageName} skipped due to exclusions"));
-        return WinGet.UninstallByName(packageName);
     }
 
     static void RemoveChat() =>
